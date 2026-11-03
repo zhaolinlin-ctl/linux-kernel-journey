@@ -1,0 +1,39 @@
+// Page Cache 路径观测骨架
+// 用法：sudo bpftrace trace.bt
+
+BEGIN
+{
+    printf("tracing page cache path... hit Ctrl-C to end\n");
+}
+
+kprobe:filemap_fault
+{
+    @fault = count();
+}
+
+kprobe:add_to_page_cache_lru
+{
+    @add_cache = count();
+}
+
+kprobe:page_cache_sync_readahead
+{
+    @readahead = count();
+}
+
+interval:s:5
+{
+    print(@fault);
+    print(@add_cache);
+    print(@readahead);
+    clear(@fault);
+    clear(@add_cache);
+    clear(@readahead);
+}
+
+END
+{
+    clear(@fault);
+    clear(@add_cache);
+    clear(@readahead);
+}
